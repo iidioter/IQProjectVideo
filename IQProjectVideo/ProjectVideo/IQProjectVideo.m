@@ -42,11 +42,11 @@ NSString *const IQFileCreateDateKey = @"IQFileCreateDate";
 -(void)startVideoCaptureOfDuration:(NSInteger)seconds savePath:(NSString*)path
 {
     [self cancel];
- 
+    
     _path = path;
-
+    
     [self startCapturingScreenshots];
-
+    
     _stopTimer = [NSTimer scheduledTimerWithTimeInterval:seconds target:self selector:@selector(stopVideoCapture) userInfo:nil repeats:NO];
 }
 
@@ -55,7 +55,7 @@ NSString *const IQFileCreateDateKey = @"IQFileCreateDate";
     [self cancel];
     
     [self startCapturingScreenshots];
-
+    
     _path = path;
 }
 
@@ -63,16 +63,16 @@ NSString *const IQFileCreateDateKey = @"IQFileCreateDate";
 {
     _progressBlock = progressBlock;
     _completionBlock = completionBlock;
+    
+    //To free thread being hand.
+    [self performSelector:@selector(stopVideoCapture) withObject:nil afterDelay:0.0001];
+}
 
+-(void)stopVideoCapture
+{
     [_timer invalidate];
     [_stopTimer invalidate];
     
-    //To free thread being hand.
-    [self performSelector:@selector(delayedWrite) withObject:nil afterDelay:0.1];
-}
-
--(void)delayedWrite
-{
     UIWindow*   _window = [[UIApplication sharedApplication] keyWindow];
     
     [self writeImageAsMovie:_images toPath:_path size:_window.bounds.size];
@@ -84,7 +84,7 @@ CGImageRef UIGetScreenImage(void);
 -(void)screenshot
 {
     CGImageRef screen = UIGetScreenImage();
-
+    
     UIImage *image = [[UIImage alloc] initWithCGImage:screen];
     
     if (image)  [_images addObject:[[UIImage alloc] initWithCGImage:screen]];
@@ -134,9 +134,12 @@ CGImageRef UIGetScreenImage(void);
             CVPixelBufferRelease(buffer);
             i++;
             
-            dispatch_sync(dispatch_get_main_queue(), ^{
-                _progressBlock((CGFloat)i/(CGFloat)array.count);
-            });
+            if (_progressBlock != NULL)
+            {
+                dispatch_sync(dispatch_get_main_queue(), ^{
+                    _progressBlock((CGFloat)i/(CGFloat)array.count);
+                });
+            }
             
             while (1)
             {
@@ -161,15 +164,22 @@ CGImageRef UIGetScreenImage(void);
                         [adaptor appendPixelBuffer:buffer withPresentationTime:presentTime];
                         CVPixelBufferRelease(buffer);
                         i++;
-                        dispatch_sync(dispatch_get_main_queue(), ^{
-                            _progressBlock((CGFloat)i/(CGFloat)array.count);
-                        });
-                   }
+                        if (_progressBlock != NULL)
+                        {
+                            dispatch_sync(dispatch_get_main_queue(), ^{
+                                _progressBlock((CGFloat)i/(CGFloat)array.count);
+                            });
+                        }
+                    }
                     else
                     {
-                        dispatch_sync(dispatch_get_main_queue(), ^{
-                            _progressBlock(1);
-                        });
+                        if (_progressBlock != NULL)
+                        {
+                            dispatch_sync(dispatch_get_main_queue(), ^{
+                                _progressBlock((CGFloat)i/(CGFloat)array.count);
+                            });
+                        }
+                        
                         NSLog (@"Finished AtPath:%@",path);
                         break;
                     }
@@ -192,17 +202,20 @@ CGImageRef UIGetScreenImage(void);
             }
             [self cancel];
             
-
+            
             NSDictionary *fileAttrubutes = [[NSFileManager defaultManager] attributesOfItemAtPath:path error:nil];
             NSDictionary *dictInfo = [NSDictionary dictionaryWithObjectsAndKeys:
                                       path,IQFilePathKey,
                                       [fileAttrubutes objectForKey:NSFileSize], IQFileSizeKey,
                                       [fileAttrubutes objectForKey:NSFileCreationDate], IQFileCreateDateKey,
                                       nil];
-            dispatch_sync(dispatch_get_main_queue(), ^{
-                _completionBlock(dictInfo);
-            });
-
+            
+            if (_completionBlock != NULL)
+            {
+                dispatch_sync(dispatch_get_main_queue(), ^{
+                    _completionBlock(dictInfo);
+                });
+            }
             
             NSString *openCommand = [NSString stringWithFormat:@"/usr/bin/open \"%@\"", NSTemporaryDirectory()];
             system([openCommand fileSystemRepresentation]);
@@ -217,7 +230,7 @@ CGImageRef UIGetScreenImage(void);
                              [NSNumber numberWithBool:YES], kCVPixelBufferCGImageCompatibilityKey,
                              [NSNumber numberWithBool:YES], kCVPixelBufferCGBitmapContextCompatibilityKey,
                              nil];
-
+    
     CVPixelBufferRef pxbuffer = NULL;
     CVPixelBufferCreate(kCFAllocatorDefault, CGImageGetWidth(image),
                         CGImageGetHeight(image), kCVPixelFormatType_32ARGB, (__bridge CFDictionaryRef) options,
@@ -235,7 +248,7 @@ CGImageRef UIGetScreenImage(void);
     
     //    CGAffineTransform flipVertical = CGAffineTransformMake( 1, 0, 0, -1, 0, CGImageGetHeight(image) );
     //    CGContextConcatCTM(context, flipVertical);
-
+    
     //    CGAffineTransform flipHorizontal = CGAffineTransformMake( -1.0, 0.0, 0.0, 1.0, CGImageGetWidth(image), 0.0 );
     //    CGContextConcatCTM(context, flipHorizontal);
     

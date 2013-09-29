@@ -31,12 +31,22 @@ NSString *const IQFileCreateDateKey = @"IQFileCreateDate";
     [_images removeAllObjects];
 }
 
+-(void)startCapturingScreenshots
+{
+    _timer = [NSTimer scheduledTimerWithTimeInterval:1.0/30.0 target:self selector:@selector(screenshot) userInfo:nil repeats:YES];
+    
+    /*When we scroll UIScrollView, UI updates, and _timer does not call 'screenshot' function. To fix this issue issue, we add our timer to our current runloop. Added by Iftekhar*/
+    [[NSRunLoop currentRunLoop] addTimer:_timer forMode:NSRunLoopCommonModes];
+}
+
 -(void)startVideoCaptureOfDuration:(NSInteger)seconds savePath:(NSString*)path
 {
     [self cancel];
  
     _path = path;
-    _timer = [NSTimer scheduledTimerWithTimeInterval:1.0/30.0 target:self selector:@selector(screenshot) userInfo:nil repeats:YES];
+
+    [self startCapturingScreenshots];
+
     _stopTimer = [NSTimer scheduledTimerWithTimeInterval:seconds target:self selector:@selector(stopVideoCapture) userInfo:nil repeats:NO];
 }
 
@@ -44,8 +54,9 @@ NSString *const IQFileCreateDateKey = @"IQFileCreateDate";
 {
     [self cancel];
     
+    [self startCapturingScreenshots];
+
     _path = path;
-    _timer = [NSTimer scheduledTimerWithTimeInterval:1.0/30.0 target:self selector:@selector(screenshot) userInfo:nil repeats:YES];
 }
 
 -(void)stopVideoCaptureWithProgress:(ProgressBlock)progressBlock completionHandler:(CompletionBlock)completionBlock

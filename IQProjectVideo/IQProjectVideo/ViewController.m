@@ -10,7 +10,7 @@
 #import "InfoViewController.h"
 #import "IQProjectVideo.h"
 
-@interface ViewController ()<UIGestureRecognizerDelegate,UITextFieldDelegate>
+@interface ViewController ()<UIGestureRecognizerDelegate,UITextFieldDelegate,UITableViewDataSource,UITableViewDelegate>
 
 @end
 
@@ -63,6 +63,41 @@
     [myImageView setTransform:CGAffineTransformScale(myImageView.transform, gesture.scale, gesture.scale)];
     gesture.scale = 1.0;
 }
+
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return 10;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    static NSString *identifier = @"cell";
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:identifier];
+    
+    if (cell == nil)
+    {
+        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:identifier];
+        [cell.textLabel setTextAlignment:NSTextAlignmentCenter];
+    }
+    
+    [cell.textLabel setText:[NSString stringWithFormat:@"  {  %d  ,  %d  }  ",indexPath.row,indexPath.section]];
+
+    return cell;
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+}
+
+
+-(void)scrollViewDidScroll:(UIScrollView *)scrollView
+{
+    [[[UIApplication sharedApplication] keyWindow] setNeedsDisplay];
+}
+
+
 
 - (void)didReceiveMemoryWarning
 {
@@ -130,6 +165,7 @@
 }
 
 - (void)viewDidUnload {
+    tableViewDemo = nil;
     [super viewDidUnload];
 }
 

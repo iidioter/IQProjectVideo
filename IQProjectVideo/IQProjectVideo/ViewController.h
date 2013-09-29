@@ -14,6 +14,7 @@
     IBOutlet UILabel *labelTimeElapsed;
     IBOutlet UIActivityIndicatorView *activityIndicator;
     IBOutlet UIProgressView *progressView;
+    IBOutlet UITableView *tableViewDemo;
 }
 
 - (IBAction)startRecordingClicked:(UIButton *)sender;

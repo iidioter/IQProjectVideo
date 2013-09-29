@@ -342,6 +342,7 @@
 				AF9A23CB17F861C3001953D4 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

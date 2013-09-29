@@ -10,12 +10,11 @@
 typedef void(^ProgressBlock)(CGFloat progress);
 typedef void(^CompletionBlock)(NSDictionary* fileInfo);
 
+
+//This class uses a Private API function 'UIGetScreenImage(void) to capture images. This class should not be used for App Store app.
 @interface IQProjectVideo : NSObject
 {
-    NSMutableArray  *_images;
     NSString        *_path;
-    NSTimer         *_timer;
-    NSTimer         *_stopTimer;
     ProgressBlock   _progressBlock;
     CompletionBlock _completionBlock;
 }
@@ -29,6 +28,7 @@ typedef void(^CompletionBlock)(NSDictionary* fileInfo);
 //Stop video capture.
 -(void)stopVideoCaptureWithProgress:(ProgressBlock)progressBlock completionHandler:(CompletionBlock)completionBlock;
 
+//Cancel video capture.
 -(void)cancel;
 
 

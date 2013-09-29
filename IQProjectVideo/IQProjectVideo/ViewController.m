@@ -138,6 +138,7 @@
         [progressView setProgress:0 animated:NO];
         recordStartTime = [NSDate date];
         timerRecord = [NSTimer scheduledTimerWithTimeInterval:1.0 target:self selector:@selector(updateTimeElapsed) userInfo:nil repeats:YES];
+        [[NSRunLoop currentRunLoop] addTimer:timerRecord forMode:NSRunLoopCommonModes];
     }
     //Start recording video.
     else
@@ -155,7 +156,7 @@
                 [progressView setProgress:progress animated:YES];
             }
         } completionHandler:^(NSDictionary *fileInfo) {
-            [labelTimeElapsed setText:[NSString stringWithFormat:@"File Size:%@",[fileInfo objectForKey:IQFileSizeKey]]];
+            NSLog(@"%@",fileInfo);
             sender.tag = 0;
             [sender setTitle:@"Start Recording" forState:UIControlStateNormal];
             [sender setUserInteractionEnabled:YES];

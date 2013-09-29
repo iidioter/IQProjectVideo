@@ -13,6 +13,12 @@ NSString *const IQFileSizeKey = @"IQFileSize";
 NSString *const IQFileCreateDateKey = @"IQFileCreateDate";
 
 @implementation IQProjectVideo
+{
+    NSMutableArray  *_images;
+    NSTimer         *_stopTimer;
+    CADisplayLink   *_displayLink;
+}
+
 
 - (id)init
 {
@@ -26,17 +32,18 @@ NSString *const IQFileCreateDateKey = @"IQFileCreateDate";
 -(void)cancel
 {
     _path = nil;
-    [_timer invalidate];
+    [_displayLink invalidate];
     [_stopTimer invalidate];
     [_images removeAllObjects];
 }
 
 -(void)startCapturingScreenshots
 {
-    _timer = [NSTimer scheduledTimerWithTimeInterval:1.0/30.0 target:self selector:@selector(screenshot) userInfo:nil repeats:YES];
-    
+    //CADisplay link will call @selector(screenshot) at a refresh rate of screen display.
+    _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(screenshot)];
+  
     /*When we scroll UIScrollView, UI updates, and _timer does not call 'screenshot' function. To fix this issue issue, we add our timer to our current runloop. Added by Iftekhar*/
-    [[NSRunLoop currentRunLoop] addTimer:_timer forMode:NSRunLoopCommonModes];
+    [_displayLink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSRunLoopCommonModes];
 }
 
 -(void)startVideoCaptureOfDuration:(NSInteger)seconds savePath:(NSString*)path
@@ -70,7 +77,7 @@ NSString *const IQFileCreateDateKey = @"IQFileCreateDate";
 
 -(void)stopVideoCapture
 {
-    [_timer invalidate];
+    [_displayLink invalidate];
     [_stopTimer invalidate];
     
     UIWindow*   _window = [[UIApplication sharedApplication] keyWindow];
@@ -80,11 +87,12 @@ NSString *const IQFileCreateDateKey = @"IQFileCreateDate";
 
 //Private API. Can't be used for App Store app.
 CGImageRef UIGetScreenImage(void);
+int a = 0;
 
 -(void)screenshot
 {
     CGImageRef screen = UIGetScreenImage();
-    
+ 
     UIImage *image = [[UIImage alloc] initWithCGImage:screen];
     
     if (image)  [_images addObject:[[UIImage alloc] initWithCGImage:screen]];
@@ -141,6 +149,12 @@ CGImageRef UIGetScreenImage(void);
                 });
             }
             
+            NSLog(@"Ltimestamp:%f",_displayLink.timestamp);
+            NSLog(@"Lduration:%f",_displayLink.duration);
+            NSLog(@"LframeInterval:%d",_displayLink.frameInterval);
+            
+
+            
             while (1)
             {
                 if (writerInput.readyForMoreMediaData == NO)
@@ -151,8 +165,8 @@ CGImageRef UIGetScreenImage(void);
                 }
                 else
                 {
-                    CMTime frameTime = CMTimeMake(1, 3);
-                    CMTime lastTime=CMTimeMake(i, 30);
+                    CMTime frameTime = CMTimeMake(1, (int)(0.1/_displayLink.duration));
+                    CMTime lastTime=CMTimeMake(i, (int)(1/_displayLink.duration));
                     CMTime presentTime=CMTimeAdd(lastTime, frameTime);
                     
                     if (i >= [array count])     buffer = NULL;

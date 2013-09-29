@@ -25,6 +25,7 @@
 		AF9A23D817F87014001953D4 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AF9A23D717F87014001953D4 /* AVFoundation.framework */; };
 		AF9A23DA17F8701A001953D4 /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AF9A23D917F8701A001953D4 /* CoreMedia.framework */; };
 		AF9A23DC17F87027001953D4 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AF9A23DB17F87027001953D4 /* CoreVideo.framework */; };
+		AF9A242517F8E95C001953D4 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AF9A242417F8E95C001953D4 /* QuartzCore.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -53,6 +54,7 @@
 		AF9A23D717F87014001953D4 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		AF9A23D917F8701A001953D4 /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
 		AF9A23DB17F87027001953D4 /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = System/Library/Frameworks/CoreVideo.framework; sourceTree = SDKROOT; };
+		AF9A242417F8E95C001953D4 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -60,6 +62,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AF9A242517F8E95C001953D4 /* QuartzCore.framework in Frameworks */,
 				AF9A23DC17F87027001953D4 /* CoreVideo.framework in Frameworks */,
 				AF9A23DA17F8701A001953D4 /* CoreMedia.framework in Frameworks */,
 				AF9A23D817F87014001953D4 /* AVFoundation.framework in Frameworks */,
@@ -75,6 +78,7 @@
 		AF9A239A17F861C2001953D4 = {
 			isa = PBXGroup;
 			children = (
+				AF9A242417F8E95C001953D4 /* QuartzCore.framework */,
 				AF9A23D317F86A5D001953D4 /* ProjectVideo */,
 				AF9A23AC17F861C2001953D4 /* IQProjectVideo */,
 				AF9A23A517F861C2001953D4 /* Frameworks */,

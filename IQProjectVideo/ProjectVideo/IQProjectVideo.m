@@ -1,6 +1,5 @@
 //
-//  IQImagesToMovie.m
-//  VideoCreatorDemo
+//  IQProjectVideo
 //
 //  Created by Iftekhar Mac Pro on 9/26/13.
 //  Copyright (c) 2013 Iftekhar. All rights reserved.

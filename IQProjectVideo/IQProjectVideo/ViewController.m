@@ -134,7 +134,7 @@
         sender.tag = 1;
         [sender setTitle:@"Stop Recording" forState:UIControlStateNormal];
         projectVideo = [[IQProjectVideo alloc] init];
-        [projectVideo startVideoCaptureWithSavePath:[NSTemporaryDirectory() stringByAppendingString:@"movie.mov"]];
+        [projectVideo startVideoCapture];
         [progressView setProgress:0 animated:NO];
         recordStartTime = [NSDate date];
         timerRecord = [NSTimer scheduledTimerWithTimeInterval:1.0 target:self selector:@selector(updateTimeElapsed) userInfo:nil repeats:YES];
@@ -146,17 +146,11 @@
         [sender setUserInteractionEnabled:NO];
         [timerRecord invalidate];
         [activityIndicator startAnimating];
-        [projectVideo stopVideoCaptureWithProgress:^(CGFloat progress){
-            if (progress == 1)
-            {
-                [activityIndicator stopAnimating];
-            }
-            else
-            {
-                [progressView setProgress:progress animated:YES];
-            }
-        } completionHandler:^(NSDictionary *fileInfo) {
-            NSLog(@"%@",fileInfo);
+        [projectVideo stopVideoCaptureWithProgress:^(CGFloat progress) {
+            [progressView setProgress:progress animated:YES];
+        } CompletionHandler:^(NSDictionary *info, NSError *error) {
+       
+            NSLog(@"%@",info);
             sender.tag = 0;
             [sender setTitle:@"Start Recording" forState:UIControlStateNormal];
             [sender setUserInteractionEnabled:YES];

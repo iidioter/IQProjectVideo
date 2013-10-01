@@ -8,7 +8,7 @@
 #import <Foundation/Foundation.h>
 
 typedef void(^ProgressBlock)(CGFloat progress);
-typedef void(^CompletionBlock)(NSDictionary* fileInfo);
+typedef void(^CompletionBlock)(NSDictionary* info, NSError* error);
 
 
 //This class uses a Private API function 'UIGetScreenImage(void) to capture images. This class should not be used for App Store app.
@@ -19,14 +19,16 @@ typedef void(^CompletionBlock)(NSDictionary* fileInfo);
     CompletionBlock _completionBlock;
 }
 
++(IQProjectVideo*)sharedController;
+
 //Start capturing video of screen. Automatically call stopVideoCapture after 'seconds' parameter.
--(void)startVideoCaptureOfDuration:(NSInteger)seconds savePath:(NSString*)path;
+-(void)startVideoCaptureOfDuration:(NSInteger)seconds WithProgress:(ProgressBlock)progressBlock completionBlock:(CompletionBlock)completionBlock;
 
 //Start capturing video of screen. You need to manually call stopVideoCapture to stop video capture.
--(void)startVideoCaptureWithSavePath:(NSString*)path;
+-(void)startVideoCapture;
 
 //Stop video capture.
--(void)stopVideoCaptureWithProgress:(ProgressBlock)progressBlock completionHandler:(CompletionBlock)completionBlock;
+-(void)stopVideoCaptureWithProgress:(ProgressBlock)progressBlock CompletionHandler:(CompletionBlock)completionBlock;
 
 //Cancel video capture.
 -(void)cancel;

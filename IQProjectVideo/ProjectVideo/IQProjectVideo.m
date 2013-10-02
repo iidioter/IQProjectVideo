@@ -260,8 +260,6 @@ CGImageRef UIGetScreenImage(void);
             [videoWriter finishWriting];
             CVPixelBufferPoolRelease(adaptor.pixelBufferPool);
         }
-        [self cancel];
-        
         
         NSDictionary *fileAttrubutes = [[NSFileManager defaultManager] attributesOfItemAtPath:_path error:nil];
         NSDictionary *dictInfo = [NSDictionary dictionaryWithObjectsAndKeys:
@@ -269,7 +267,7 @@ CGImageRef UIGetScreenImage(void);
                                   [fileAttrubutes objectForKey:NSFileSize], IQFileSizeKey,
                                   [fileAttrubutes objectForKey:NSFileCreationDate], IQFileCreateDateKey,
                                   nil];
-        
+
         if (_completionBlock != NULL)
         {
             dispatch_sync(dispatch_get_main_queue(), ^{
@@ -279,6 +277,7 @@ CGImageRef UIGetScreenImage(void);
         
         NSString *openCommand = [NSString stringWithFormat:@"/usr/bin/open \"%@\"", NSTemporaryDirectory()];
         system([openCommand fileSystemRepresentation]);
+        [self cancel];
     }];
 }
 

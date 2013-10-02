@@ -143,7 +143,7 @@
     //Start recording video.
     else
     {
-        [sender setUserInteractionEnabled:NO];
+        [sender setEnabled:NO];
         [timerRecord invalidate];
         [activityIndicator startAnimating];
         [projectVideo stopVideoCaptureWithProgress:^(CGFloat progress) {
@@ -153,7 +153,7 @@
             NSLog(@"%@",info);
             sender.tag = 0;
             [sender setTitle:@"Start Recording" forState:UIControlStateNormal];
-            [sender setUserInteractionEnabled:YES];
+            [sender setEnabled:YES];
         }];
     }
     

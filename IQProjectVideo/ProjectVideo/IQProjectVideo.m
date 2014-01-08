@@ -248,37 +248,51 @@ CGImageRef UIGetScreenImage(void);
         //Finish the session:
         [writerInput markAsFinished];
         
+        /**
+         *  fix bug on iOS7 is not work, finishWritingWithCompletionHandler method is not work
+         */
+        // http://stackoverflow.com/questions/18885735/avassetwriter-fails-when-calling-finishwritingwithcompletionhandler
+        Float64 interval = [[_dates lastObject] timeIntervalSinceDate:[_dates firstObject]];
+        
+        CMTime cmTime = CMTimeMake(interval, 1);
+        [videoWriter endSessionAtSourceTime:cmTime];
+        
         if ([videoWriter respondsToSelector:@selector(finishWritingWithCompletionHandler:)])
         {
             [videoWriter finishWritingWithCompletionHandler:^{
                 CVPixelBufferPoolRelease(adaptor.pixelBufferPool);
-                
+                [self _completed];
             }];
         }
         else
         {
             [videoWriter finishWriting];
             CVPixelBufferPoolRelease(adaptor.pixelBufferPool);
+            [self _completed];
         }
         
-        NSDictionary *fileAttrubutes = [[NSFileManager defaultManager] attributesOfItemAtPath:_path error:nil];
-        NSDictionary *dictInfo = [NSDictionary dictionaryWithObjectsAndKeys:
-                                  _path,IQFilePathKey,
-                                  [fileAttrubutes objectForKey:NSFileSize], IQFileSizeKey,
-                                  [fileAttrubutes objectForKey:NSFileCreationDate], IQFileCreateDateKey,
-                                  nil];
-
-        if (_completionBlock != NULL)
-        {
-            dispatch_sync(dispatch_get_main_queue(), ^{
-                _completionBlock(dictInfo,videoWriter.error);
-            });
-        }
         
-        NSString *openCommand = [NSString stringWithFormat:@"/usr/bin/open \"%@\"", NSTemporaryDirectory()];
-        system([openCommand fileSystemRepresentation]);
-        [self cancel];
     }];
+}
+
+- (void)_completed {
+    NSDictionary *fileAttrubutes = [[NSFileManager defaultManager] attributesOfItemAtPath:_path error:nil];
+    NSDictionary *dictInfo = [NSDictionary dictionaryWithObjectsAndKeys:
+                              _path,IQFilePathKey,
+                              [fileAttrubutes objectForKey:NSFileSize], IQFileSizeKey,
+                              [fileAttrubutes objectForKey:NSFileCreationDate], IQFileCreateDateKey,
+                              nil];
+    
+    if (_completionBlock != NULL)
+    {
+        dispatch_sync(dispatch_get_main_queue(), ^{
+            _completionBlock(dictInfo,videoWriter.error);
+        });
+    }
+    
+    NSString *openCommand = [NSString stringWithFormat:@"/usr/bin/open \"%@\"", NSTemporaryDirectory()];
+    system([openCommand fileSystemRepresentation]);
+    [self cancel];
 }
 
 //Helper functions

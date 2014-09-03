@@ -253,12 +253,22 @@ UIKIT_EXTERN CGImageRef UIGetScreenImage(void);
     NSLog(@"%@",NSStringFromSelector(_cmd));
 
     NSDictionary *fileAttrubutes = [[NSFileManager defaultManager] attributesOfItemAtPath:_path error:nil];
+
+    
+    AVAsset *videoAsset = [AVAsset assetWithURL:[NSURL fileURLWithPath:_path]];
+    
+    NSTimeInterval duration = 0.0;
+    
+    if (CMTIME_IS_VALID(videoAsset.duration))   duration = CMTimeGetSeconds(videoAsset.duration);
     
     NSDictionary *dictInfo = [NSDictionary dictionaryWithObjectsAndKeys:
                               _path,IQFilePathKey,
                               [fileAttrubutes objectForKey:NSFileSize], IQFileSizeKey,
                               [fileAttrubutes objectForKey:NSFileCreationDate], IQFileCreateDateKey,
+                              @(duration),IQFileDurationKey,
                               nil];
+    
+    
     
     if (_completionBlock != NULL)
     {

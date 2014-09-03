@@ -9,7 +9,6 @@
 
 typedef void(^CompletionBlock)(NSDictionary* info, NSError* error);
 
-
 //This class uses a Private API function 'UIGetScreenImage(void) to capture images. This class should not be used for App Store app.
 @interface IQProjectVideo : NSObject
 {
@@ -38,4 +37,4 @@ typedef void(^CompletionBlock)(NSDictionary* info, NSError* error);
 extern NSString *const IQFilePathKey;
 extern NSString *const IQFileSizeKey;
 extern NSString *const IQFileCreateDateKey;
-//extern NSString *const IQFileDurationKey;
+extern NSString *const IQFileDurationKey;

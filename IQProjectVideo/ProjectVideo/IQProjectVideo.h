@@ -7,7 +7,6 @@
 
 #import <Foundation/Foundation.h>
 
-typedef void(^ProgressBlock)(CGFloat progress);
 typedef void(^CompletionBlock)(NSDictionary* info, NSError* error);
 
 
@@ -15,20 +14,19 @@ typedef void(^CompletionBlock)(NSDictionary* info, NSError* error);
 @interface IQProjectVideo : NSObject
 {
     NSString        *_path;
-    ProgressBlock   _progressBlock;
     CompletionBlock _completionBlock;
 }
 
 +(IQProjectVideo*)sharedController;
 
 //Start capturing video of screen. Automatically call stopVideoCapture after 'seconds' parameter.
--(void)startVideoCaptureOfDuration:(NSInteger)seconds WithProgress:(ProgressBlock)progressBlock completionBlock:(CompletionBlock)completionBlock;
+-(void)startVideoCaptureOfDuration:(NSInteger)seconds completionBlock:(CompletionBlock)completionBlock;
 
 //Start capturing video of screen. You need to manually call stopVideoCapture to stop video capture.
 -(void)startVideoCapture;
 
 //Stop video capture.
--(void)stopVideoCaptureWithProgress:(ProgressBlock)progressBlock CompletionHandler:(CompletionBlock)completionBlock;
+-(void)stopVideoCaptureWithCompletionHandler:(CompletionBlock)completionBlock;
 
 //Cancel video capture.
 -(void)cancel;
@@ -40,3 +38,4 @@ typedef void(^CompletionBlock)(NSDictionary* info, NSError* error);
 extern NSString *const IQFilePathKey;
 extern NSString *const IQFileSizeKey;
 extern NSString *const IQFileCreateDateKey;
+//extern NSString *const IQFileDurationKey;

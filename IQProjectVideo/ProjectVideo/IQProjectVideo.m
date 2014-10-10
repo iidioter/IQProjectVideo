@@ -8,25 +8,30 @@
 #import "IQProjectVideo.h"
 #import <AVFoundation/AVFoundation.h>
 
-NSString *const IQFilePathKey = @"IQFilePath";
-NSString *const IQFileSizeKey = @"IQFileSize";
+NSString *const IQFilePathKey       = @"IQFilePath";
+NSString *const IQFileSizeKey       = @"IQFileSize";
 NSString *const IQFileCreateDateKey = @"IQFileCreateDate";
+NSString *const IQFileDurationKey   = @"IQFileDurationKey";
+
 
 static IQProjectVideo *shareObject;
 
 @implementation IQProjectVideo
 {
-    NSOperationQueue    *_operationQueue;
+    NSOperationQueue    *_readOperationQueue;
+    NSOperationQueue    *_writeOperationQueue;
+    
     NSTimer             *_stopTimer;
     NSTimer             *_startTimer;
-    NSMutableArray      *_dates;
-    //    CADisplayLink     *_displayLink;
+    
+    NSDate *_startDate;
+    NSDate *_previousDate;
+    NSDate *_currentDate;
     
     AVAssetWriter *videoWriter;
     AVAssetWriterInput* writerInput;
     AVAssetWriterInputPixelBufferAdaptor *adaptor;
     CVPixelBufferRef buffer;
-    NSUInteger currentIndex;
 }
 
 
@@ -44,45 +49,35 @@ static IQProjectVideo *shareObject;
 - (id)init
 {
     self = [super init];
-    if (self) {
-        _operationQueue = [[NSOperationQueue alloc] init];
-        [_operationQueue setMaxConcurrentOperationCount:1];
-        _dates = [[NSMutableArray alloc] init];
-        buffer = NULL;
-        currentIndex = 0;
-        _path = [NSTemporaryDirectory() stringByAppendingString:@"movie.mov"];
+    if (self)
+    {
+        _readOperationQueue = [[NSOperationQueue alloc] init];
+        _readOperationQueue.name = @"Read Operation Queue";
+        [_readOperationQueue setMaxConcurrentOperationCount:1];
         
-        [_operationQueue addOperationWithBlock:^{
-            [self removeAllTemporaryFiles];
-        }];
+        _writeOperationQueue = [[NSOperationQueue alloc] init];
+        _writeOperationQueue.name = @"Write Operation Queue";
+        [_writeOperationQueue setMaxConcurrentOperationCount:1];
+        
+        buffer = NULL;
+        _path = [NSTemporaryDirectory() stringByAppendingString:@"movie.mov"];
     }
     return self;
-}
-
--(void)removeAllTemporaryFiles
-{
-    NSArray *items = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:NSTemporaryDirectory() error:nil];
-    
-    for (NSString *fileNames in items)
-        [[NSFileManager defaultManager] removeItemAtPath:[NSHomeDirectory() stringByAppendingString:fileNames] error:nil];
 }
 
 -(void)cancel
 {
     [_startTimer invalidate];
-    //    [_displayLink invalidate];
     [_stopTimer invalidate];
+
     buffer = NULL;
-    currentIndex = 0;
-    _progressBlock = NULL;
     _completionBlock = NULL;
-    
-    [_dates removeAllObjects];
 }
 
 -(void)startCapturingScreenshots
 {
-    [_operationQueue addOperationWithBlock:^{
+    NSBlockOperation *blockOperation = [NSBlockOperation blockOperationWithBlock:^{
+
         if ([[NSFileManager defaultManager] fileExistsAtPath:_path])
             [[NSFileManager defaultManager] removeItemAtPath:_path error:nil];
         
@@ -109,21 +104,20 @@ static IQProjectVideo *shareObject;
         [videoWriter startSessionAtSourceTime:kCMTimeZero];
     }];
     
+    if (_writeOperationQueue.operationCount)    [blockOperation addDependency:_writeOperationQueue.operations.lastObject];
+    [_writeOperationQueue addOperation:blockOperation];
+    
+    _startDate = [NSDate date];
+    _currentDate = _startDate;
+
     _startTimer = [NSTimer scheduledTimerWithTimeInterval:1.0/30.0 target:self selector:@selector(screenshot) userInfo:nil repeats:YES];
     [[NSRunLoop currentRunLoop] addTimer:_startTimer forMode:NSRunLoopCommonModes];
-    
-    //    //CADisplay link will call @selector(screenshot) at a refresh rate of screen display.
-    //    _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(screenshot)];
-    //
-    //    /*When we scroll UIScrollView, UI updates, and _timer does not call 'screenshot' function. To fix this issue issue, we add our timer to our current runloop. Added by Iftekhar*/
-    //    [_displayLink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSRunLoopCommonModes];
 }
 
--(void)startVideoCaptureOfDuration:(NSInteger)seconds WithProgress:(ProgressBlock)progressBlock completionBlock:(CompletionBlock)completionBlock
+-(void)startVideoCaptureOfDuration:(NSInteger)seconds completionBlock:(CompletionBlock)completionBlock
 {
     [self cancel];
     _completionBlock = completionBlock;
-    _progressBlock = progressBlock;
     
     [self startCapturingScreenshots];
     
@@ -137,10 +131,9 @@ static IQProjectVideo *shareObject;
     [self startCapturingScreenshots];
 }
 
--(void)stopVideoCaptureWithProgress:(ProgressBlock)progressBlock CompletionHandler:(CompletionBlock)completionBlock
+-(void)stopVideoCaptureWithCompletionHandler:(CompletionBlock)completionBlock
 {
     _completionBlock = completionBlock;
-    _progressBlock = progressBlock;
     [self stopVideoCapture];
 }
 
@@ -154,96 +147,63 @@ static IQProjectVideo *shareObject;
 }
 
 //Private API. Can't be used for App Store app.
-CGImageRef UIGetScreenImage(void);
+UIKIT_EXTERN CGImageRef UIGetScreenImage(void);
 
 -(void)screenshot
 {
     CGImageRef screen = UIGetScreenImage();
-    [_dates addObject:[NSDate date]];
-    
-    [_operationQueue addOperationWithBlock:^{
+
+    _previousDate = _currentDate;
+    _currentDate = [NSDate date];
+
+    NSBlockOperation *imageReadOperation = [NSBlockOperation blockOperationWithBlock:^{
+
         UIImage *image = [[UIImage alloc] initWithCGImage:screen];
         CGImageRelease(screen);
+
         if (image)
         {
-            [UIImagePNGRepresentation(image) writeToFile:[NSTemporaryDirectory() stringByAppendingFormat:@"%d.png",currentIndex++] atomically:YES];
-            //            NSLog(@"%d",currentIndex);
-        }
-    }];
-}
-
--(void)markFinishAndWriteMovie
-{
-    [_operationQueue addOperationWithBlock:^{
-        
-        NSInteger i = 0;
-        
-        NSString *path = [NSTemporaryDirectory() stringByAppendingFormat:@"%d.png",i];
-        UIImage *image;
-        
-        NSDate *startDate;
-        
-        while ((image = [UIImage imageWithContentsOfFile:path]))
-        {
-            while (1)
-            {
-                if (writerInput.readyForMoreMediaData == NO)
+            NSBlockOperation *imageWriteOperation = [NSBlockOperation blockOperationWithBlock:^{
+                
+                while (writerInput.readyForMoreMediaData == NO)
                 {
                     sleep(0.01);
                     continue;
                 }
-                else
+                
+                //First time only
+                if (buffer == NULL) CVPixelBufferPoolCreatePixelBuffer (NULL, adaptor.pixelBufferPool, &buffer);
+                
+                buffer = [IQProjectVideo pixelBufferFromCGImage:image.CGImage];
+                
+                if (buffer)
                 {
-                    //First time only
-                    if (buffer == NULL)
-                    {
-                        CVPixelBufferPoolCreatePixelBuffer (NULL, adaptor.pixelBufferPool, &buffer);
-                        startDate = [_dates objectAtIndex:i];
-                    }
+                    Float64 interval = [_currentDate timeIntervalSinceDate:_startDate];
+                    int32_t timeScale = 1.0/([_currentDate timeIntervalSinceDate:_previousDate]);
                     
-                    buffer = [IQProjectVideo pixelBufferFromCGImage:image.CGImage];
+                    /**/
+                    CMTime presentTime=CMTimeMakeWithSeconds(interval, MAX(33, timeScale));
+                    //                        NSLog(@"presentTime:%@",(__bridge NSString *)CMTimeCopyDescription(kCFAllocatorDefault, presentTime));
                     
-                    if (buffer)
-                    {
-                        NSDate *currentDate = [_dates objectAtIndex:i];
-                        Float64 interval = [currentDate timeIntervalSinceDate:startDate];
-                        
-                        int32_t timeScale;
-                        
-                        if (i == 0)
-                        {
-                            timeScale = 1.0/([[_dates objectAtIndex:i+1] timeIntervalSinceDate:currentDate]);
-                        }
-                        else
-                        {
-                            timeScale = 1.0/([currentDate timeIntervalSinceDate:[_dates objectAtIndex:i-1]]);
-                        }
-                        
-                        /**/
-                        CMTime presentTime=CMTimeMakeWithSeconds(interval, MAX(33, timeScale));
-                        //                        NSLog(@"presentTime:%@",(__bridge NSString *)CMTimeCopyDescription(kCFAllocatorDefault, presentTime));
-                        
-                        
-                        if (_progressBlock != NULL)
-                        {
-                            dispatch_sync(dispatch_get_main_queue(), ^{
-                                _progressBlock((CGFloat)i/(CGFloat)currentIndex);
-                            });
-                        }
-                        
-                        
-                        // append buffer
-                        [adaptor appendPixelBuffer:buffer withPresentationTime:presentTime];
-                        CVPixelBufferRelease(buffer);
-                    }
-                    break;
+                    // append buffer
+                    [adaptor appendPixelBuffer:buffer withPresentationTime:presentTime];
+                    CVPixelBufferRelease(buffer);
                 }
-            }
-            
-            [[NSFileManager defaultManager] removeItemAtPath:path error:nil];
-            
-            path = [NSTemporaryDirectory() stringByAppendingFormat:@"%d.png",++i];
+
+            }];
+
+            if (_writeOperationQueue.operationCount)    [imageWriteOperation addDependency:_writeOperationQueue.operations.lastObject];
+            [_writeOperationQueue addOperation:imageWriteOperation];
         }
+    }];
+    
+    if (_readOperationQueue.operationCount) [imageReadOperation addDependency:_readOperationQueue.operations.lastObject];
+    [_readOperationQueue addOperation:imageReadOperation];
+}
+
+-(void)markFinishAndWriteMovie
+{
+    NSBlockOperation *finishOperation = [NSBlockOperation blockOperationWithBlock:^{
         
         //Finish the session:
         [writerInput markAsFinished];
@@ -252,13 +212,14 @@ CGImageRef UIGetScreenImage(void);
          *  fix bug on iOS7 is not work, finishWritingWithCompletionHandler method is not work
          */
         // http://stackoverflow.com/questions/18885735/avassetwriter-fails-when-calling-finishwritingwithcompletionhandler
-        Float64 interval = [[_dates lastObject] timeIntervalSinceDate:[_dates firstObject]];
+        Float64 interval = [_currentDate timeIntervalSinceDate:_startDate];
         
         CMTime cmTime = CMTimeMake(interval, 1);
         [videoWriter endSessionAtSourceTime:cmTime];
         
         if ([videoWriter respondsToSelector:@selector(finishWritingWithCompletionHandler:)])
         {
+            NSLog(@"finishWritingWithCompletionHandler");
             [videoWriter finishWritingWithCompletionHandler:^{
                 CVPixelBufferPoolRelease(adaptor.pixelBufferPool);
                 [self _completed];
@@ -270,13 +231,29 @@ CGImageRef UIGetScreenImage(void);
             CVPixelBufferPoolRelease(adaptor.pixelBufferPool);
             [self _completed];
         }
-        
-        
     }];
+    
+    NSLog(@"Read Operations Left: %lu",(unsigned long)_readOperationQueue.operationCount);
+    for (NSOperation *readOperation in _readOperationQueue.operations)
+    {
+        [finishOperation addDependency:readOperation];
+    }
+    
+    NSLog(@"Write Operations Left: %lu",(unsigned long)_writeOperationQueue.operationCount);
+    for (NSOperation *writeOperation in _writeOperationQueue.operations)
+    {
+        [finishOperation addDependency:writeOperation];
+    }
+    
+    [_writeOperationQueue addOperation:finishOperation];
 }
 
-- (void)_completed {
+- (void)_completed
+{
+    NSLog(@"%@",NSStringFromSelector(_cmd));
+
     NSDictionary *fileAttrubutes = [[NSFileManager defaultManager] attributesOfItemAtPath:_path error:nil];
+    
     NSDictionary *dictInfo = [NSDictionary dictionaryWithObjectsAndKeys:
                               _path,IQFilePathKey,
                               [fileAttrubutes objectForKey:NSFileSize], IQFileSizeKey,
@@ -296,7 +273,7 @@ CGImageRef UIGetScreenImage(void);
 }
 
 //Helper functions
-+ (CVPixelBufferRef) pixelBufferFromCGImage: (CGImageRef) image
++ (CVPixelBufferRef)pixelBufferFromCGImage:(CGImageRef) image
 {
     NSDictionary *options = [[NSDictionary alloc] initWithObjectsAndKeys:
                              [NSNumber numberWithBool:YES], kCVPixelBufferCGImageCompatibilityKey,
@@ -314,7 +291,7 @@ CGImageRef UIGetScreenImage(void);
     CGColorSpaceRef rgbColorSpace = CGColorSpaceCreateDeviceRGB();
     CGContextRef context = CGBitmapContextCreate(pxdata, CGImageGetWidth(image),
                                                  CGImageGetHeight(image), 8, 4*CGImageGetWidth(image), rgbColorSpace,
-                                                 kCGImageAlphaNoneSkipFirst);
+                                                 (CGBitmapInfo)kCGImageAlphaNoneSkipFirst);
     
     CGContextConcatCTM(context, CGAffineTransformMakeRotation(0));
     

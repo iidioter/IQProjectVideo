@@ -9,6 +9,7 @@
 #import "ViewController.h"
 #import "InfoViewController.h"
 #import "IQProjectVideo.h"
+#import <MediaPlayer/MediaPlayer.h>
 
 @interface ViewController ()<UIGestureRecognizerDelegate,UITextFieldDelegate,UITableViewDataSource,UITableViewDelegate>
 
@@ -81,7 +82,7 @@
         [cell.textLabel setTextAlignment:NSTextAlignmentCenter];
     }
     
-    [cell.textLabel setText:[NSString stringWithFormat:@"  {  %d  ,  %d  }  ",indexPath.row,indexPath.section]];
+    [cell.textLabel setText:[NSString stringWithFormat:@"  {  %ld  ,  %ld  }  ",(long)indexPath.row,(long)indexPath.section]];
 
     return cell;
 }
@@ -146,14 +147,17 @@
         [sender setEnabled:NO];
         [timerRecord invalidate];
         [activityIndicator startAnimating];
-        [projectVideo stopVideoCaptureWithProgress:^(CGFloat progress) {
-            [progressView setProgress:progress animated:YES];
-        } CompletionHandler:^(NSDictionary *info, NSError *error) {
+        
+        [projectVideo stopVideoCaptureWithCompletionHandler:^(NSDictionary *info, NSError *error) {
        
+            [activityIndicator stopAnimating];
             NSLog(@"%@",info);
             sender.tag = 0;
             [sender setTitle:@"Start Recording" forState:UIControlStateNormal];
             [sender setEnabled:YES];
+            
+            MPMoviePlayerViewController *controller = [[MPMoviePlayerViewController alloc] initWithContentURL:[NSURL fileURLWithPath:[info objectForKey:IQFilePathKey]]];
+            [self presentMoviePlayerViewControllerAnimated:controller];
         }];
     }
     

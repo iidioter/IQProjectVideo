@@ -6,6 +6,7 @@
 
 
 #import "IQProjectVideo.h"
+#import "UIView+IQCapture.h"
 #import <AVFoundation/AVFoundation.h>
 
 NSString *const IQFilePathKey       = @"IQFilePath";
@@ -64,6 +65,17 @@ static IQProjectVideo *shareObject;
     }
     return self;
 }
+
+- (id)initWithView:(UIView *)view
+{
+    self = [self init];
+    if( self )
+    {
+        self.viewCapture = view;
+    }
+    return self;
+}
+
 
 -(void)cancel
 {
@@ -147,21 +159,47 @@ static IQProjectVideo *shareObject;
 }
 
 //Private API. Can't be used for App Store app.
-UIKIT_EXTERN CGImageRef UIGetScreenImage(void);
+//UIKIT_EXTERN CGImageRef UIGetScreenImage(void);
+// privat screenshot method, replaced by legal one
+//-(void)screenshot
+//{
+//
+//    CGImageRef screen = UIGetScreenImage();
+//
+//    _previousDate = _currentDate;
+//    _currentDate = [NSDate date];
+//
+//    _imageCapture = [[UIImage alloc] initWithCGImage:screen];
+//    CGImageRelease(screen);
+//
+//    //Calling blockOperationWithBlock:^{
+//}
 
--(void)screenshot
+- (void)screenshot
 {
-    CGImageRef screen = UIGetScreenImage();
+    // if specific IQView is available
+    if( self.viewCapture )
+    {
+        self.imageCapture = [self.viewCapture imageByRenderingViewOpaque];
+    }
+    
+    // if no view is available get acutal view from UIApplication
+    else
+    {
+        UIView *aView =  [[[[UIApplication sharedApplication] keyWindow] subviews] lastObject];
+        self.imageCapture = [aView imageByRenderingViewOpaque];
+    }
 
+
+    
     _previousDate = _currentDate;
     _currentDate = [NSDate date];
-
+    
+    __weak typeof(self) weakSelf = self;
+    
     NSBlockOperation *imageReadOperation = [NSBlockOperation blockOperationWithBlock:^{
-
-        UIImage *image = [[UIImage alloc] initWithCGImage:screen];
-        CGImageRelease(screen);
-
-        if (image)
+        
+        if (weakSelf.imageCapture)
         {
             NSBlockOperation *imageWriteOperation = [NSBlockOperation blockOperationWithBlock:^{
                 
@@ -174,7 +212,7 @@ UIKIT_EXTERN CGImageRef UIGetScreenImage(void);
                 //First time only
                 if (buffer == NULL) CVPixelBufferPoolCreatePixelBuffer (NULL, adaptor.pixelBufferPool, &buffer);
                 
-                buffer = [IQProjectVideo pixelBufferFromCGImage:image.CGImage];
+                buffer = [IQProjectVideo pixelBufferFromCGImage:weakSelf.imageCapture.CGImage];
                 
                 if (buffer)
                 {
@@ -189,9 +227,9 @@ UIKIT_EXTERN CGImageRef UIGetScreenImage(void);
                     [adaptor appendPixelBuffer:buffer withPresentationTime:presentTime];
                     CVPixelBufferRelease(buffer);
                 }
-
+                
             }];
-
+            
             if (_writeOperationQueue.operationCount)    [imageWriteOperation addDependency:_writeOperationQueue.operations.lastObject];
             [_writeOperationQueue addOperation:imageWriteOperation];
         }

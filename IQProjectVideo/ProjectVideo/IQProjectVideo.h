@@ -16,7 +16,13 @@ typedef void(^CompletionBlock)(NSDictionary* info, NSError* error);
     CompletionBlock _completionBlock;
 }
 
+@property (strong, nonatomic) UIView *viewCapture;
+@property (strong, nonatomic) UIImage *imageCapture;
+
 +(IQProjectVideo*)sharedController;
+
+// initialize with view as reference for later captures
+- (id)initWithView:(UIView *)view;
 
 //Start capturing video of screen. Automatically call stopVideoCapture after 'seconds' parameter.
 -(void)startVideoCaptureOfDuration:(NSInteger)seconds completionBlock:(CompletionBlock)completionBlock;

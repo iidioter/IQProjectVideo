@@ -13,6 +13,8 @@
 
 @interface ViewController ()<UIGestureRecognizerDelegate,UITextFieldDelegate,UITableViewDataSource,UITableViewDelegate>
 
+@property (strong, nonatomic) IBOutlet UIView *view;
+
 @end
 
 @implementation ViewController
@@ -134,7 +136,7 @@
     {
         sender.tag = 1;
         [sender setTitle:@"Stop Recording" forState:UIControlStateNormal];
-        projectVideo = [[IQProjectVideo alloc] init];
+        projectVideo = [[IQProjectVideo alloc] initWithView:nil];
         [projectVideo startVideoCapture];
         [progressView setProgress:0 animated:NO];
         recordStartTime = [NSDate date];

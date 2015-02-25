@@ -27,6 +27,7 @@
 		AF9A23DC17F87027001953D4 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AF9A23DB17F87027001953D4 /* CoreVideo.framework */; };
 		AF9A242517F8E95C001953D4 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AF9A242417F8E95C001953D4 /* QuartzCore.framework */; };
 		C0C49C6019E865CF005826AD /* MediaPlayer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C0C49C5F19E865CF005826AD /* MediaPlayer.framework */; };
+		F3F03DCC1A9D1F8D00CA2786 /* UIView+IQCapture.m in Sources */ = {isa = PBXBuildFile; fileRef = F3F03DCB1A9D1F8D00CA2786 /* UIView+IQCapture.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -57,6 +58,8 @@
 		AF9A23DB17F87027001953D4 /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = System/Library/Frameworks/CoreVideo.framework; sourceTree = SDKROOT; };
 		AF9A242417F8E95C001953D4 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		C0C49C5F19E865CF005826AD /* MediaPlayer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MediaPlayer.framework; path = System/Library/Frameworks/MediaPlayer.framework; sourceTree = SDKROOT; };
+		F3F03DCA1A9D1F8D00CA2786 /* UIView+IQCapture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIView+IQCapture.h"; sourceTree = "<group>"; };
+		F3F03DCB1A9D1F8D00CA2786 /* UIView+IQCapture.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIView+IQCapture.m"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -147,6 +150,8 @@
 			children = (
 				AF9A23D417F86A5D001953D4 /* IQProjectVideo.h */,
 				AF9A23D517F86A5D001953D4 /* IQProjectVideo.m */,
+				F3F03DCA1A9D1F8D00CA2786 /* UIView+IQCapture.h */,
+				F3F03DCB1A9D1F8D00CA2786 /* UIView+IQCapture.m */,
 			);
 			path = ProjectVideo;
 			sourceTree = "<group>";
@@ -222,6 +227,7 @@
 				AF9A23B317F861C3001953D4 /* main.m in Sources */,
 				AF9A23B717F861C3001953D4 /* AppDelegate.m in Sources */,
 				AF9A23C017F861C3001953D4 /* ViewController.m in Sources */,
+				F3F03DCC1A9D1F8D00CA2786 /* UIView+IQCapture.m in Sources */,
 				AF9A23CF17F864D3001953D4 /* InfoViewController.m in Sources */,
 				AF9A23D617F86A5D001953D4 /* IQProjectVideo.m in Sources */,
 			);
